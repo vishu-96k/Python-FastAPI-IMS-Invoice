@@ -1,0 +1,100 @@
+#this file incldues the logic, matlb the INVOICE_ROUTES, will call these functins to do CURD operations on INVOICE like genrating invoice (invoice=rent), and these fucntions will take the data from the INOVOICE_API_ROUTES, Create the INVOICE(claculate rent), store them in the database, and return a responce to the API
+
+from datetime import datetime
+from bson import ObjectId
+from fastapi import HTTPException
+
+from app.database import products_collection, invoices_collection
+from app.config import RENT_RATE, GST_RATE
+
+from app.schemas.invoice_schema import (
+    InvoiceCreate,
+    InvoiceItemResponse,
+    InvoiceResponse
+)
+
+#   RENT CALCULATION (Per Day Logic)
+def calculate_rent_per_day(unit_price: float, qty: int, created_at: datetime, rent_rate=RENT_RATE):
+    today = datetime.utcnow()
+
+    days_in_inventory = (today - created_at).days
+    if days_in_inventory < 1:
+        days_in_inventory = 1
+
+    unit_total_price = unit_price * qty
+    rent_per_day = unit_total_price * rent_rate
+    total_item_rent = rent_per_day * days_in_inventory
+
+    return {
+        "days_in_inventory": days_in_inventory,
+        "unit_total_price": round(unit_total_price, 2),
+        "rent_per_day": round(rent_per_day, 2),
+        "total_item_rent": round(total_item_rent, 2)
+    }
+
+
+#  CREATE INVOICE (With Per-Day Rent + GST)
+async def create_invoice(user_id: str, products_data: InvoiceCreate):
+
+    processed_items = []
+    total_rent = 0.0
+
+    for item in products_data.items:
+        product_obj_id = ObjectId(item.product_id)
+
+        # Fetch product from DB
+        product = await products_collection.find_one({"_id": product_obj_id})
+        if not product:
+            raise HTTPException(404, f"Product not found: {item.product_id}")
+
+        # ✔ quantity comes from database, not API
+        qty = product["quantity"]
+        unit_price = product["price"]
+        created_at = product["created_at"]
+
+        if qty <= 0:
+            raise HTTPException(400, "Quantity must be positive")
+
+        # Calculate rent for this product
+        rent_data = calculate_rent_per_day(
+            unit_price=unit_price,
+            qty=qty,
+            created_at=created_at,
+            rent_rate=RENT_RATE
+        )
+
+        total_rent += rent_data["total_item_rent"]
+
+        processed_items.append({
+            "product_id": str(product["_id"]),
+            "name": product["name"],
+            "price": unit_price,
+            "qty": qty,   # comes from DB
+            "days_in_inventory": rent_data["days_in_inventory"],
+            "rent_per_day": rent_data["rent_per_day"],
+            "rent_amount": rent_data["total_item_rent"]
+        })
+
+    # GST Calculation
+    gst_amount = round(total_rent * GST_RATE, 2)
+    final_total_rent = round(total_rent + gst_amount, 2)
+
+    invoice_doc = {
+        "user_id": ObjectId(user_id),
+        "items": processed_items,
+        "rent_before_gst": round(total_rent, 2),
+        "gst_amount": gst_amount,
+        "total_rent": final_total_rent,
+        "customer_name": products_data.customer_name,
+        "customer_email": products_data.customer_email,
+        "pdf_url": None,
+        "created_at": datetime.utcnow()
+    }
+
+    res = await invoices_collection.insert_one(invoice_doc)
+
+    saved_invoice = await invoices_collection.find_one({"_id": res.inserted_id})
+    saved_invoice["_id"] = str(saved_invoice["_id"])
+    saved_invoice["user_id"] = str(saved_invoice["user_id"])
+
+    return saved_invoice

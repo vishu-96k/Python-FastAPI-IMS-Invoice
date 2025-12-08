@@ -1,0 +1,24 @@
+pip install motor python-decouple
+pip install fastapi, uvicron
+
+
+fastapi
+uvicorn
+motor
+python-decouple
+passlib[bcrypt]
+PyJWT
+pydantic
+'pydantic[email]'`
+Jinja2
+WeasyPrint
+aioboto3
+aiosmtplib
+python-multipart
+
+jinja2
+weasyprint
+aioboto3
+aiosmtplib
+python-multipart
+boto3  # optional, aioboto3 depends on it in some envs

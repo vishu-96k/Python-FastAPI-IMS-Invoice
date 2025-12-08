@@ -1,0 +1,58 @@
+#this file includes, what the each API route for the User do, how do, and why do
+"""
+ ========= HOME===================   
+home route furntion : 
+What it does:
+    Handles requests to the home page (/) of your API.
+    Checks if the user is logged in by optionally reading the JWT token.
+Why we use it:
+    To personalize the response based on whether a user is authenticated.
+    Demonstrates how optional authentication works using get_optional_user(). 
+Return value: A JSON response with a personalized message if logged in, or a guest message otherwise. 
+
+===============DEPENDS function=================   
+in a way, Depends() acts like middleware
+How Depends() works :
+    Depends() is a FastAPI dependency injection system.
+    It runs the function you pass to it (like get_current_user or get_optional_user) before your route function executes.
+    Whatever that dependency function returns is injected as a parameter into your route.
+
+Why it feels like middleware : 
+    Like middleware, it runs before your route logic.
+    It can perform checks, e.g., authenticate the user, validate input, or raise errors.
+
+========== SIGNUP=================    
+ 1️⃣ /auth/signup (POST)
+This route allows a new user to register. It takes user details like name, email, phone, password, and type. The password is securely hashed before storing, and the user is saved in the MongoDB database. The route returns the newly created user’s information (excluding the password).
+✅signup route function:
+What it does : Registers a new user in the database and returns their info (without password).
+Why we use it:
+    To allow new users to sign up for your app.
+    Ensures unique email, secure password storage, and proper response to the frontend.
+Return value:
+    A user object with fields like _id, name, email, created_at.
+    Password is not included.
+
+=========  LOGIN ===================     
+# 2️⃣ /auth/login (POST)
+This route allows a registered user to log in. It takes the user’s email and password, verifies the password against the hashed password stored in the database, and if correct, generates a JWT access token. The token is then returned to the frontend and is used for authenticating protected routes. 
+✅/auth/login route function
+What it does:
+    Authenticates a user with email and password.
+    If credentials are correct, returns a JWT access token for API access. 
+Why we use it:
+    To log in users securely.
+    Provides a token-based authentication system instead of server-side sessions.
+    Token allows access to protected routes without sending password every time.
+Return value:
+    JSON containing:
+        "access_token" → JWT string
+        "token_type" → "bearer" (standard for token authentication)
+        
+============================
+#   PROTECTED TEST ROUTE
+#3️⃣ /me (GET)
+This is a protected route that returns the current logged-in user’s information. It requires a valid JWT token in the Authorization header. The backend decodes the token, fetches the user from the database, and returns the user data without the password. Only authenticated users can access this route.
+# ============================
+
+"""

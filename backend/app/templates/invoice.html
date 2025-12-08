@@ -1,0 +1,73 @@
+<!-- In short: It is the HTML structure used to render a complete invoice, which the PDF service converts into a PDF file -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Invoice {{ invoice._id }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; }
+    table { width:100%; border-collapse: collapse; margin-top:12px; }
+    th, td { padding:8px; border:1px solid #ccc; }
+    .right { text-align:right; }
+    .section-title { margin-top: 20px; font-size: 14px; font-weight: bold; }
+  </style>
+</head>
+
+<body>
+
+  <h2>Invoice #{{ invoice._id }}</h2>
+
+  <p>
+    <strong>Customer:</strong> {{ invoice.customer_name }} <br>
+    <strong>Email:</strong> {{ invoice.customer_email }} <br>
+    <strong>Date:</strong> {{ invoice.created_at.strftime('%d-%m-%Y') }}
+  </p>
+
+  <!-- Items Table -->
+  <h3 class="section-title">Items</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Days-Store</th>
+        <th>Rent</th>
+      </tr>
+    </thead>
+    <tbody>
+     {% for it in invoice["items"] %}
+
+      <tr>
+        <td>{{ it.name }}</td>
+        <td class="right">{{ it.qty }}</td>
+        <td class="right">{{ it.price }}</td>
+        <td class="right">{{ it.days_in_inventory }}</td>
+        <td class="right">{{ it.total_rent }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Summary Section -->
+  <h3 class="section-title">Summary</h3>
+
+  <table>
+    <tr>
+      <td><strong>Rent Before GST:</strong></td>
+      <td class="right">{{ invoice.rent_before_gst }}</td>
+    </tr>
+
+    <tr>
+      <td><strong>GST Amount:</strong></td>
+      <td class="right">{{ invoice.gst_amount }}</td>
+    </tr>
+
+    <tr>
+      <td><strong>Total Rent (Final):</strong></td>
+      <td class="right"><strong>{{ invoice.total_rent }}</strong></td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+#this is for product helpers, something like object validateor

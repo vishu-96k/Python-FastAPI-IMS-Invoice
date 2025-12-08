@@ -1,0 +1,211 @@
+Here you go — a clean, production-ready backend plan for your Inventory Management System + Smart Invoice Generator, using:
+
+✅ FastAPI
+✅ MongoDB Atlas (async driver: Motor)
+✅ JWT Auth (Login + Signup)
+✅ Products module (CRUD)
+✅ Inventory Rent Calculation
+✅ Invoice Generator Module
+✅ Modular folder structure
+✅ Simple explanation for each file & route
+
+No frontend included (you said you'll build it later).
+This is ONLY the backend blueprint + what each file does.
+
+✅ 1. Final Folder Structure (Clean & Production-Friendly)
+backend/
+│── app/
+│   │── main.py
+│   │── config.py
+│   │── database.py
+│   │── utils/
+│   │   │── auth.py
+│   │   │── hashing.py
+│   │   │── jwt_handler.py
+│   │
+│   │── models/
+│   │   │── user_model.py
+│   │   │── product_model.py
+│   │   │── invoice_model.py
+│   │
+│   │── schemas/
+│   │   │── user_schema.py
+│   │   │── product_schema.py
+│   │   │── invoice_schema.py
+│   │
+│   │── routers/
+│   │   │── auth_router.py
+│   │   │── product_router.py
+│   │   │── invoice_router.py
+│   │
+│   │── services/
+│       │── invoice_service.py
+│       │── pdf_service.py
+│       │── email_service.py
+|       |--product_service.py
+│
+│── requirements.txt
+│── .env
+
+✅ 2. Simple Explanation — What Each Folder/File Does
+main.py : Starts the FastAPI app and includes all routers.
+
+config.py : Loads environment variables:
+Mongo URL
+JWT secret
+Email SMTP config
+
+database.py : Connects to MongoDB Atlas using async Motor.
+
+utils/
+General utilities:
+hashing.py → hash/verify password
+jwt_handler.py → encode/decode JWT token
+auth.py → Auth dependency to protect routes
+
+models/
+MongoDB collection structure for:
+Users
+Products
+Invoices
+(These are MongoDB documents, not SQL tables)
+
+schemas/
+Pydantic validation models for API inputs/outputs.
+
+routers/
+All REST API routes:
+auth_router → signup/login
+product_router → CRUD operations
+invoice_router → create invoice, list invoices, download, email
+
+services/
+Business logic:
+invoice_service → calculate rent, create invoice record
+pdf_service → generate PDF
+email_service → send email
+
+✅ 3. MongoDB Models (Simple & Interview-Friendly)
+User Model
+{
+  _id: ObjectId,
+  name: string,
+  email: string,
+  password: hashed string,
+  created_at: datetime
+}
+
+Product Model
+{
+  _id: ObjectId,
+  owner_id: ObjectId (user),
+  name: string,
+  description: string,
+  price: number,
+  quantity: number,
+  created_at: datetime
+}
+
+Invoice Model
+{
+  _id: ObjectId,
+  user_id: ObjectId,
+  products: [ { productId, qty, price } ],
+  total_rent: number,
+  pdf_url: string,
+  created_at: datetime,
+  emailed: bool
+}
+
+✅ 4. API Routes You Need (Super Clean)
+Auth Routes
+Method	Route	Description
+POST	/auth/signup	register new user
+POST	/auth/login	login + get JWT
+
+Product Routes : All product routes need JWT authentication.
+Method	Route	Description
+POST	/products/	create product
+GET	/products/	list all products of logged-in user
+GET	/products/{id}	get one product
+PUT	/products/{id}	update product
+DELETE	/products/{id}	delete product
+
+Invoice Routes
+Method	Route	Description
+POST	/invoice/generate	generate invoice for selected products
+GET	/invoice/	list all invoices
+GET	/invoice/{id}	get single invoice
+GET	/invoice/{id}/download	get PDF invoice
+POST	/invoice/{id}/email	send invoice to customer
+
+✅ 5. Rent Calculation Logic (your unique requirement)
+
+How rent is calculated:
+
+Rule:
+Rent = sum of (product.price × quantity × 0.02)
+(You can modify rate = 2% monthly/storage fee)
+
+Example:
+Mouse  ₹1000  qty=2 → 2000 x 0.02 = 40
+Keyboard  ₹2000 qty=1 → 2000 x 0.02 = 40
+
+Total Rent = ₹80
+
+This logic will live inside:
+
+services/invoice_service.py
+
+✅ 6. How All Files Talk Together (Flow Diagram)
+Authentication
+
+React sends signup/login → FastAPI → Mongo → returns JWT
+JWT protects all other APIs.
+
+Products
+
+User sends product → router → schema validation → MongoDB insert
+Fetching also uses owner_id to filter.
+
+Invoice Process
+React → POST /invoice/generate
+           ↓
+Invoice service calculates rent
+           ↓
+PDF generator creates invoice.pdf
+           ↓
+Store in /static/invoices or S3
+           ↓
+Save invoice record in MongoDB
+           ↓
+Email service sends invoice (optional)
+
+✅ 7. What You Should Build First (Backend Order)
+
+Setup project + folder structure
+
+Connect to MongoDB Atlas (database.py)
+
+Build user auth (signup/login)
+
+Build product CRUD
+
+Build invoice logic + rent calculation
+
+Build PDF generator (simple HTML → PDF)
+
+Build email sending
+
+Test everything using Thunder Client / Postman
+
+I m done with the JWT wala part 
+ I just have started making this applicaiton, like i have configured and conneceted to databse,  using the databs.py file and created the log in, sign, up routes and even implemented JWT in it even created the user _schema for data validation, now i need to Build product CRUD operations once the user is log in,which I will be veryfiying thorugh swagger, and as per now, I have the routes to be in my main.py only , after wards i will put them in the route folder 
+
+my main.py looks like this :
+
+and databse look likes :
+
+and my user_schema :
+
+thats it tell me step by step approach to do this, and what all files should be there, like I have 

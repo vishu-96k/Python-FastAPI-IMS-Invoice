@@ -1,0 +1,45 @@
+app/database.py--------> file name // this file basically connects to database and returns a database object which uh can use for curd opetration
+✅ What database.py does
+This file connects your FastAPI backend to MongoDB.
+It creates a client object → connection to MongoDB server.
+It creates a database object → reference to a specific database.
+It also creates collection objects → users, products, invoices.
+These objects are used everywhere in your app to perform CRUD operations.
+
+
+
+✅ What is a MongoDB Driver?
+A MongoDB Driver is a software library that allows your programming language (Python, Java, C#, etc.) to talk to MongoDB.
+Think of it like a translator between:
+Your code
+The MongoDB database
+
+A MongoDB driver = the tool that lets your code communicate with MongoDB.
+
+👉 In Python, the MongoDB drivers are:
+PyMongo → normal (sync) driver
+Motor → async driver (used in FastAPI)
+
+What does a MongoDB driver do?
+It gives you functions to: Connect to MongoDB, Insert data , Read data , do CURD operations
+
+
+Imports Explanation
+1️⃣ from motor.motor_asyncio import AsyncIOMotorClient
+Imports Motor, the async version of the MongoDB driver.
+AsyncIOMotorClient lets you connect to MongoDB using async/await.
+Faster and non-blocking → perfect for FastAPI.
+
+2️⃣ from decouple import config
+Imports config function from python-decouple.
+Allows you to read values from a .env file.
+
+✅ What this code does (in short) database.py:
+Imports Motor : (async MongoDB driver) to connect to MongoDB using async/await.
+Reads environment variables : MONGO_URL and DB_NAME from .env file using decouple.
+Creates a MongoDB client : using AsyncIOMotorClient(MONGO_URL).
+Gets the database by name: db = client[DB_NAME].
+Creates references to collections : (users, products, invoices) so you can use them for CRUD operations.
+
+
+-----------------------------------------------------DATABSE CONNECTION ------------------------------------------

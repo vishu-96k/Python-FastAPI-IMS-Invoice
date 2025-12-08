@@ -1,0 +1,42 @@
+ENV :First create the connectiion of databse,using the .env file
+
+database.py : this file will connect to the mongodb cluster, using the .env file variables
+
+main.py : this file will just start the server, and import all routes, so that the user can connect to the API, but the actual route logic is in the ROUTE folder
+
+MODELS : these are the python class, whihc will store the actual data
+    user_model : this will store the user info, like name, email, password, phone no, all sign up data feilds
+    -This models will not be used for storing the actual data, they are just refrences, and the actual data will be store in the "SCHEMA" folder, where the actul schema (models only) are creaetd as per the requrenment of the FASTAPI
+
+SCHEMA : this is the folder, in which data validations will be done, and that data will be snet to the database, but these classes wont store the data, they just represent it 
+
+ROUTES : these are the api end points, where the user can make request from the brousser
+    auth_router : this will be used for sign up and login, and this will be using the data from the user model, like username and password
+
+
+UTILS : this is the code, which will be including the logic for login authentication, using the JWT token
+
+
+def calculate_rent_per_day(unit_price: float, qty: int, created_at: datetime, rent_rate=RENT_RATE):
+    """
+    Rent calculation per item:
+    - Count days the product stayed in inventory
+    - Daily rent = (unit_price * qty * rent_rate)
+    - Total rent = daily_rent * days
+    """
+    today = datetime.utcnow()
+
+    days_in_inventory = (today - created_at).days
+    if days_in_inventory < 1:
+        days_in_inventory = 1  # minimum 1 day rent
+
+    unit_total_price = unit_price * qty  # price * qty
+    rent_per_day = unit_total_price * rent_rate
+    total_item_rent = rent_per_day * days_in_inventory
+
+    return {
+        "days_in_inventory": days_in_inventory,
+        "unit_total_price": round(unit_total_price),
+        "rent_per_day": round(rent_per_day),
+        "total_item_rent": round(total_item_rent)
+    }

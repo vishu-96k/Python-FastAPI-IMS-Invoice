@@ -81,8 +81,8 @@ async def generate_invoice_pdf_local(cust_id: str) -> dict:
     template = env.get_template("invoice.html")
     html = template.render(invoice=invoice)
 
-    # PDF Output Path
-    pdf_filename = f"invoice_{invoice['_id']}.pdf"
+    # PDF Output Path, and file name
+    pdf_filename = f"{invoice['_id']}.pdf"
     output_path = os.path.join(PDF_DIR, pdf_filename)
 
     # Run PDF conversion in thread

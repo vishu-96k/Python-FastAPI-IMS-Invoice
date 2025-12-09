@@ -19,13 +19,16 @@ from app.services.product_service import create_product, get_products, get_produ
 from app.schemas.invoice_schema import InvoiceCreate, InvoiceItemResponse, InvoiceResponse
 from app.services.invoice_service import create_invoice, calculate_rent_per_day
 
-# INVOICE PDF GENRATION KE LIYE 
+# INVOICE PDF GENRATION KE LIYE and S3 UPLOADATION
 import os
 import io
 from app.services import storage_service, email_service
 from app.services.pdf_service_locally import generate_invoice_pdf_local, get_invoice_by_customer_id
 from app.services.storage_service import upload_pdf_to_s3
 from app.database import products_collection, invoices_collection
+
+# INVOICE PDF SENDING MAIL KE LIYE
+from app.services.email_service import send_email_with_attachment
 
 
 app = FastAPI()  # Create FastAPI instance
@@ -151,7 +154,7 @@ async def gen_invoice_route(current_user=Depends(get_current_user)): #thir produ
     invoice = await create_invoice(
         cust_id=str(current_user["_id"]),
         customer_name=str(current_user["name"]),
-        customer_email=str(current_user["name"]),
+        customer_email=str(current_user["email"]),
     )
     # convert _id to str in service or here
     invoice["_id"] = str(invoice["_id"])
@@ -188,8 +191,24 @@ async def gen_invoice_pdf_route(current_user=Depends(get_current_user)):
         "local_pdf_path": pdf_path,
         "s3_url": s3_url
     }
+#-----------------INVOICE PDF ROUTES--ENDED-----------------
 
+#-----------------INVOICE EMAIL ROUTES--------------------
+@app.post("/invoice/send-invoice-mail")
+async def send_invoice_mail_route(current_user=Depends(get_current_user)):
+    cust_id=str(current_user["_id"])
+    cust_name=str(current_user["name"])
+    cust_email=str(current_user["email"])
+    cust_phone = str(current_user["phone"])
+    print(cust_email)
 
+    await send_email_with_attachment(
+        cust_id,
+        cust_name,
+        cust_email,
+        cust_phone,
+    )
+    return {"message": "Invoice emailed successfully"}
 
 
 

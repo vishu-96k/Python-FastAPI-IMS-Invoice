@@ -2,6 +2,7 @@
 #In short: It converts invoice data → HTML → PDF → uploads to S3 → returns the URL.
 # app/services/pdf_service.py
 # app/services/pdf_service.py
+#this file nis of no use, becoz we will be storing the pdfs into S3 bucket, but this file stores the pdfs, into the localy file system of ur PC
 
 import os
 import asyncio
@@ -74,7 +75,7 @@ async def generate_invoice_pdf_local(cust_id: str) -> dict:
     4. Save to app/PDFs/
     5. Return invoice + path
     """
-    invoice = await get_invoice_by_customer_id(cust_id)
+    invoice = await get_invoice_by_customer_id(cust_id) #invoice has all the invoice data, in JSON format
 
     # Render HTML using Jinja2 template
     template = env.get_template("invoice.html")

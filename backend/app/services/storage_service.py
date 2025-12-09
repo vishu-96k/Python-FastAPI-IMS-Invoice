@@ -1,63 +1,105 @@
-#this file, It handles file upload, secure download URLs, and object retrieval from AWS S3 in an async-safe way.
+#this file will upload the genrated PDF, to the s3 Bucket
+#storage_service.py handles uploading PDF files to AWS S3 and then deleting the PDF from local storage.
+# It is the storage layer of your backend, responsible only for file handling — NOT PDF creation, only uploading + cleanup.
 
 # app/services/storage_service.py
 import os
 import aioboto3
 from botocore.config import Config
 from typing import Optional
+from motor.motor_asyncio import AsyncIOMotorClient   # Import async MongoDB client (Motor driver)
+from decouple import config      
 
-AWS_REGION = os.getenv("AWS_REGION")
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-S3_BUCKET = os.getenv("S3_BUCKET")
-S3_BASE_URL = os.getenv("S3_BASE_URL")  # optional if public
 
-_s3_kwargs = {
-    "region_name": AWS_REGION,
-    "aws_access_key_id": AWS_ACCESS_KEY,
-    "aws_secret_access_key": AWS_SECRET_KEY,
-    "config": Config(signature_version="s3v4")
-}
+AWS_REGION =  config("AWS_REGION")
+AWS_ACCESS_KEY =  config("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY =  config("AWS_SECRET_ACCESS_KEY")
+S3_BUCKET = config("S3_BUCKET")
+# S3_BUCKET = os.getenv("S3_BUCKET") this os.getenv will not work, so use Config() fun to get the env variables  
 
-async def upload_file(local_path: str, s3_key: str, content_type: str = "application/pdf") -> str:
+# Create aioboto3 session
+session = aioboto3.Session()
+
+# Path: app/services → so BASE_DIR = app/
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+# PDF folder: app/PDFs
+PDF_DIR = os.path.join(BASE_DIR, "PDFs")
+
+
+async def upload_pdf_to_s3(pdf_filename: str):
     """
-    Uploads local file to S3 and returns a public URL or constructed URL.
+    Uploads a locally stored PDF from app/PDFs/ to S3 bucket.
+    After upload → deletes the local file.
     """
-    session = aioboto3.Session()
-    async with session.client("s3", **_s3_kwargs) as s3:
-        await s3.upload_file(Filename=local_path, Bucket=S3_BUCKET, Key=s3_key,
-                             ExtraArgs={"ContentType": content_type, "ACL": "private"})
-    # Return either a constructed public URL or object path. We store both key and url.
-    if S3_BASE_URL:
-        return S3_BASE_URL.rstrip("/") + "/" + s3_key
-    return f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
+    print("DEBUG S3_BUCKET =", S3_BUCKET)
+    # Full local file path
+    local_pdf_path = os.path.join(PDF_DIR, pdf_filename)
 
-async def generate_presigned_url(s3_key: str, expires_in: int = 3600) -> str:
-    session = aioboto3.Session()
-    async with session.client("s3", **_s3_kwargs) as s3:
-        url = await s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": S3_BUCKET, "Key": s3_key},
-            ExpiresIn=expires_in,
-        )
-    return url
+    if not os.path.exists(local_pdf_path):
+        raise FileNotFoundError(f"PDF not found: {local_pdf_path}")
 
-async def get_object_bytes(s3_key: str) -> bytes:
-    session = aioboto3.Session()
-    async with session.client("s3", **_s3_kwargs) as s3:
-        resp = await s3.get_object(Bucket=S3_BUCKET, Key=s3_key)
-        async with resp["Body"] as stream:
-            data = await stream.read()
-    return data
+    async with session.client(
+        "s3",
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY,
+        aws_secret_access_key=AWS_SECRET_KEY,
+        config=Config(signature_version="s3v4")
+    ) as s3:
+
+        # S3 key (folder inside bucket)  
+        s3_key = f"invoices/{pdf_filename}"
+
+        # Upload file
+        await s3.upload_file(local_pdf_path, S3_BUCKET, s3_key)
+
+        # S3 public URL (if bucket is public)
+        s3_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
+
+# -------- DELETE ALL PREVIOUS LOCAL FILES EXCEPT CURRENT ---------
+        try:
+            for file in os.listdir(PDF_DIR):
+                file_path = os.path.join(PDF_DIR, file)
+
+                # Skip folders
+                if os.path.isdir(file_path):
+                    continue
+
+                # Skip the newly created file
+                if file == pdf_filename:
+                    continue
+
+                # Delete old file
+                os.remove(file_path)
+                print(f"Deleted old PDF: {file_path}")
+
+        except Exception as e:
+            print("Failed to clean PDFs folder:", e)
+
+        return s3_url
+
 
 '''
  --------------EXPLANATION -----------
-This file (storage_service.py) provides all S3-related operations for your FastAPI backend using aioboto3 (async AWS SDK). It loads AWS credentials from environment variables and sets up a reusable S3 client configuration.
-    
-It exposes three async functions:
-upload_file() → Uploads a local file to an S3 bucket with a given key, sets proper content-type, keeps the file private, and returns a public-accessible URL (either via custom base URL or default S3 URL).
+The storage_service.py file is responsible only for handling the uploading of invoice PDF files to AWS S3. It does not generate PDFs; instead, it receives the name of a PDF file that already exists locally inside the app/PDFs/ folder. Using this filename, the service builds the full file path and prepares the file for upload.
 
-generate_presigned_url() → Creates a temporary, signed URL allowing secure download of a private S3 object (default expiry 1 hour).
+Once the file is located, the service creates an asynchronous S3 client using aioboto3 and uploads the PDF to the specified S3 bucket under a folder named invoices/. After a successful upload, it generates the public S3 URL for the uploaded PDF, allowing other parts of the system — or the frontend — to access or download it.
 
-get_object_bytes() → Downloads a file from S3 and returns its raw bytes, useful for in-memory operations (e.g., returning PDF bytes to API).
+Finally, to save storage space and avoid unnecessary file accumulation on the server, the service deletes the local copy of the PDF after uploading it to S3. In simple terms, this file takes a local PDF, uploads it to cloud storage, returns the cloud URL, and removes the local version to keep the backend clean.
+
+Flow Summary (very clear)
+pdf_service.py  
+    ↓
+Creates PDF inside → app/PDFs/invoice_xxx.pdf  
+    ↓
+invoice_router  
+    ↓
+Calls storage_service.upload_pdf_to_s3(pdf_filename)  
+    ↓
+storage_service.py  
+    ↓
+Uploads to S3  
+Deletes local file  
+Returns final S3 URL  
+
 '''
+

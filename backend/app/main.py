@@ -23,9 +23,10 @@ from app.services.invoice_service import create_invoice, calculate_rent_per_day
 import os
 import io
 from app.services import storage_service, email_service
-from app.services.storage_service import generate_presigned_url, upload_file, get_object_bytes
-from app.services.pdf_service import generate_invoice_pdf_local
-from fastapi.responses import RedirectResponse, FileResponse, StreamingResponse
+from app.services.pdf_service_locally import generate_invoice_pdf_local, get_invoice_by_customer_id
+from app.services.storage_service import upload_pdf_to_s3
+from app.database import products_collection, invoices_collection
+
 
 app = FastAPI()  # Create FastAPI instance
 
@@ -37,7 +38,6 @@ async def home(current_user=Depends(get_optional_user)): #this depends is an mid
         return {"msg": f"Hello {current_user['name']}, you are logged in!"}
     else:
         return {"msg": "Welcome Guest! Please login or signup."}
-
 
 #this route, creaets a user, and store it in data base, and returns the user_id
 @app.post("/auth/signup", response_model=UserResponse)
@@ -83,7 +83,6 @@ async def login(payload: UserLogin):
         "access_token": access_token,
         "token_type": "bearer"
     }
-
 
 @app.get("/me")
 async def get_me(current_user = Depends(get_current_user)):
@@ -161,16 +160,33 @@ async def gen_invoice_route(current_user=Depends(get_current_user)): #thir produ
 #-----------------INVOICE ROUTES--ENDED-----------------
 
 #-----------------INVOICE PDF ROUTES--------------------
-
-@app.get("/invoice/get_pdf") #this will take the user_id from the current user, and pass it as cust_it, and find that invoice, and fetch the details, and create and genrate PDF
-async def generate_invoice_pdf_route(current_user=Depends(get_current_user)):
+@app.get("/invoice/get_pdf") #this will take the user_id from the current user, and pass it as cust_it, and find that invoice, and fetch the details, and create and genrate PDF, and even upload that pdf to S3 bucket
+async def gen_invoice_pdf_route(current_user=Depends(get_current_user)):
     cust_id=str(current_user["_id"])
-    result = await generate_invoice_pdf_local(cust_id)
+
+    # Generate invoice + local PDF file
+    result = await generate_invoice_pdf_local(cust_id) #this genrates PDF locally and stores in PDFs folder
+
+    invoice = result["invoice"] #this has the actual invoice data, becoz result has invoice, and pdf path, which is store locally
+    pdf_path = result["pdf_path"]      # this is local PDF path like /tmp/invoice_123.pdf  # e.g. app/PDFs/invoice_6732ab1d.pdf
+
+    # Extract only the filename from the path
+    pdf_filename = os.path.basename(pdf_path)   # ➜ invoice_6732ab1d.pdf
+
+    # Upload to S3
+    s3_url = await upload_pdf_to_s3(pdf_filename)
+
+    #updating the invoice, adding its S3 URL in exsisting invoices pdf_url feild
+    result = await invoices_collection.update_one(
+        {"cust_id": ObjectId(cust_id)},  #find the invoice based on its Cust_id, and then update pdf_url feild 
+        {"$set": {"pdf_url": s3_url}} #set the s3 url as PDF URL in the invoice collection 
+    )
 
     return {
-        "message": "PDF generated successfully",
-        "invoice": result["invoice"],
-        "pdf_path": result["pdf_path"]
+        "message": "PDF generated & uploaded successfully",
+        "invoice": invoice,
+        "local_pdf_path": pdf_path,
+        "s3_url": s3_url
     }
 
 

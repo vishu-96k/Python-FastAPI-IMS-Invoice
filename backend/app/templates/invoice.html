@@ -20,7 +20,11 @@
   <p>
     <strong>Customer:</strong> {{ invoice.customer_name }} <br>
     <strong>Email:</strong> {{ invoice.customer_email }} <br>
-    <strong>Date:</strong> {{ invoice.created_at.strftime('%d-%m-%Y') }}
+    <strong>Date:</strong> {{ invoice.created_at.strftime('%d-%m-%Y') }} <br>
+    <strong>Intrest:</strong> 0.002 % per day <br>
+    <strong>GST:</strong> 18 %  <br>
+    
+
   </p>
 
   <!-- Items Table -->
@@ -32,7 +36,8 @@
         <th>Qty</th>
         <th>Price</th>
         <th>Days-Store</th>
-        <th>Rent</th>
+        <th>Unit-Total</th>
+        <th>Rent (price * days * Intrest)</th>
       </tr>
     </thead>
     <tbody>
@@ -43,6 +48,7 @@
         <td class="right">{{ it.qty }}</td>
         <td class="right">{{ it.price }}</td>
         <td class="right">{{ it.days_in_inventory }}</td>
+        <td class="right">{{ it.unit_total }}</td>
         <td class="right">{{ it.total_rent }}</td>
       </tr>
       {% endfor %}

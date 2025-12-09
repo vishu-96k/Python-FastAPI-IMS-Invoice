@@ -1,3 +1,4 @@
+#incoice matlnb bill, this will genrate the bill and store it in the JSON format in the database, inside the Invoice collection
 #this file incldues the logic, matlb the INVOICE_ROUTES, will call these functins to do CURD operations on INVOICE like genrating invoice (invoice=rent), and these fucntions will take the data from the INOVOICE_API_ROUTES, Create the INVOICE(claculate rent), store them in the database, and return a responce to the API
 
 from datetime import datetime, timezone

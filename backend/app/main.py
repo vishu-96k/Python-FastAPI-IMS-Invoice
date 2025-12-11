@@ -19,6 +19,7 @@ from app.services.product_service import create_product, get_products, get_produ
 from app.schemas.invoice_schema import InvoiceCreate, InvoiceItemResponse, InvoiceResponse
 from app.services.invoice_service import create_invoice, calculate_rent_per_day
 
+
 # INVOICE PDF GENRATION KE LIYE and S3 UPLOADATION
 import os
 import io
@@ -26,6 +27,7 @@ from app.services import storage_service, email_service
 from app.services.pdf_service_locally import generate_invoice_pdf_local, get_invoice_by_customer_id
 from app.services.storage_service import upload_pdf_to_s3
 from app.database import products_collection, invoices_collection
+
 
 # INVOICE PDF SENDING MAIL KE LIYE
 from app.services.email_service import send_email_with_attachment
@@ -163,6 +165,7 @@ async def gen_invoice_route(current_user=Depends(get_current_user)): #thir produ
 #-----------------INVOICE ROUTES--ENDED-----------------
 
 #-----------------INVOICE PDF ROUTES--------------------
+#FOR CREATING PDF AND STORING IT IN S3
 @app.get("/invoice/get_pdf") #this will take the user_id from the current user, and pass it as cust_it, and find that invoice, and fetch the details, and create and genrate PDF, and even upload that pdf to S3 bucket
 async def gen_invoice_pdf_route(current_user=Depends(get_current_user)):
     cust_id=str(current_user["_id"])
@@ -194,6 +197,7 @@ async def gen_invoice_pdf_route(current_user=Depends(get_current_user)):
 #-----------------INVOICE PDF ROUTES--ENDED-----------------
 
 #-----------------INVOICE EMAIL ROUTES--------------------
+#FOR SENDING PDF AND INVOICE AS MAIL
 @app.post("/invoice/send-invoice-mail")
 async def send_invoice_mail_route(current_user=Depends(get_current_user)):
     cust_id=str(current_user["_id"])

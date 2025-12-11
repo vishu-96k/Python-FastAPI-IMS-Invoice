@@ -13,9 +13,9 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 PDF_DIR = os.path.join(BASE_DIR, "PDFs")
 
 
-SMTP_HOST = config("SMTP_HOST")
+SMTP_HOST = config("SMTP_HOST") #Opens a TCP connection to the SMTP server at SMTP_HOST:SMTP_PORT.
 SMTP_PORT = int(config("SMTP_PORT", 587))
-SMTP_USER = config("SMTP_USER")
+SMTP_USER = config("SMTP_USER") #Authenticates (usually via AUTH LOGIN or AUTH PLAIN) using SMTP_USER and SMTP_PASS.
 SMTP_PASS = config("SMTP_PASS")
 EMAIL_FROM = config("EMAIL_FROM", "noreply@example.com")
 
@@ -47,7 +47,7 @@ async def send_email_with_attachment(
 
 
     # Create email message
-    msg = EmailMessage()
+    msg = EmailMessage() #this just creates a mail, in correct format
     msg["From"] = EMAIL_FROM
     msg["To"] = cust_email
     msg["Subject"] = subject
@@ -61,7 +61,7 @@ async def send_email_with_attachment(
         filename=filename
     )
 
-    # Send email
+    # Send email, using the smtp protocol, to the googles-mailing-server thts it
     await aiosmtplib.send(
         msg,
         hostname=SMTP_HOST,

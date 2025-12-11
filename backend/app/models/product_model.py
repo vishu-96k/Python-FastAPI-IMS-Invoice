@@ -1,5 +1,2 @@
-# MongoDB collection structure for:
-# Users
-# Products
-# Invoices
-# (These are MongoDB documents, not SQL tables)
+# MongoDB collection structure for: products_schema
+# products, its just for refenceing, the application backend does not have anything to do wiht this file, even if uh dont make the modles here for refence then also its fine

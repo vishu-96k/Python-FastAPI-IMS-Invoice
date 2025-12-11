@@ -1,0 +1,68 @@
+
+📌📌📌📌📌 THIS FILES INCLUDES WHAT EACH API ROUTE S3 STORAGE DO, HOW THEY DO, WHY THEY DO 📌📌📌📌📌
+
+✅ ROUTE : "/invoice/get_pdf" :
+WHAT IT DOES : 
+This API Generates a PDF for the current user’s invoice, uploads that PDF to S3, updates the invoice record with the S3 URL, and returns the invoice data plus local and S3 paths.
+
+✅ Short Summary – What this file does
+storage_service.py is the file uploader service in your backend.
+It does NOT generate PDFs. It:
+Accepts the PDF file name (generated earlier by pdf_service.py)
+Finds the file in the local directory app/PDFs/
+Uploads the file to AWS S3 using aioboto3 (async boto3)
+Returns the public S3 URL
+Deletes all old local PDF files except the latest one (cleanup)
+
+In short:
+Local PDF → S3 bucket → Return URL → Clean local folder
+
+✅ services/storage_service.py :
+The api Calls this upload_file_to_s3() fun and passes the pdf file path 
+
+✅SHORT SUMMARY — Line-by-Line Explanation
+
+IMPORTS
+os → handles file paths & deleting files
+aioboto3 → async AWS S3 client (non-blocking uploads)
+Config (botocore) → enables AWS Signature V4 security
+Optional → type hint (not used)
+AsyncIOMotorClient → Mongo driver (unused, can remove)
+decouple.config → loads .env variables safely
+
+🔐 ENV VARIABLES
+Loaded from .env:
+AWS region
+Access key
+Secret key
+S3 bucket name
+Used for authentication + deciding upload destination.
+
+📦 SESSION & PATHS
+session = aioboto3.Session() → reusable async S3 session
+PDF_DIR = app/PDFs → where local PDFs are stored before upload
+
+🚀 upload_pdf_to_s3(pdf_filename)
+1. Build local file path
+app/PDFs/<file>.pdf
+
+2. Check file exists
+If not → error.
+
+3. Create async S3 client
+With region + credentials + signature v4.
+
+4. Create S3 key
+invoices/<filename>
+
+5. Upload file
+Async → won’t block FastAPI.
+
+6. Build public URL
+https://bucket.s3.region.amazonaws.com/invoices/file.pdf
+
+7. Cleanup local folder
+Delete all old PDFs → keep only the latest.
+
+🎯 Final Output
+Returns the public S3 URL of the uploaded PDF.

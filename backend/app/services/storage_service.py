@@ -3,12 +3,12 @@
 # It is the storage layer of your backend, responsible only for file handling — NOT PDF creation, only uploading + cleanup.
 
 # app/services/storage_service.py
-import os
-import aioboto3
-from botocore.config import Config
-from typing import Optional
-from motor.motor_asyncio import AsyncIOMotorClient   # Import async MongoDB client (Motor driver)
-from decouple import config      
+import os                       # OS module → used to work with file paths & delete files
+import aioboto3                 # Async version of boto3 → used to upload files to AWS S3
+from botocore.config import Config    # To configure S3 client settings like signature version
+from typing import Optional     
+from motor.motor_asyncio import AsyncIOMotorClient   # MongoDB async client (not used here)
+from decouple import config     # Used to read environment variables safely
 
 
 AWS_REGION =  config("AWS_REGION")
@@ -17,12 +17,14 @@ AWS_SECRET_KEY =  config("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET = config("S3_BUCKET")
 # S3_BUCKET = os.getenv("S3_BUCKET") this os.getenv will not work, so use Config() fun to get the env variables  
 
-# Create aioboto3 session
+# Create an aioboto3 session (required for creating async S3 clients)
 session = aioboto3.Session()
 
-# Path: app/services → so BASE_DIR = app/
+
+# ------------------ PATH SETTINGS ------------------
+# BASE_DIR = parent folder of /services → i.e., /app
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-# PDF folder: app/PDFs
+# Local folder where PDFs are temporarily stored
 PDF_DIR = os.path.join(BASE_DIR, "PDFs")
 
 
@@ -32,12 +34,16 @@ async def upload_pdf_to_s3(pdf_filename: str):
     After upload → deletes the local file.
     """
     print("DEBUG S3_BUCKET =", S3_BUCKET)
-    # Full local file path
+    
+    
+    # Build full path to file → app/PDFs/<filename>
     local_pdf_path = os.path.join(PDF_DIR, pdf_filename)
 
+    # If file is missing, stop the process
     if not os.path.exists(local_pdf_path):
         raise FileNotFoundError(f"PDF not found: {local_pdf_path}")
 
+     # Create an async S3 client using credentials, SO THAT USING THT UH CAN UPLOAD THE FILE TO S3
     async with session.client(
         "s3",
         region_name=AWS_REGION,
@@ -46,10 +52,10 @@ async def upload_pdf_to_s3(pdf_filename: str):
         config=Config(signature_version="s3v4")
     ) as s3:
 
-        # S3 key (folder inside bucket)  
+         # S3 folder path → invoices/<filename> 
         s3_key = f"invoices/{pdf_filename}"
 
-        # Upload file
+        # Upload the file from local path → S3 bucket
         await s3.upload_file(local_pdf_path, S3_BUCKET, s3_key)
 
         # S3 public URL (if bucket is public)

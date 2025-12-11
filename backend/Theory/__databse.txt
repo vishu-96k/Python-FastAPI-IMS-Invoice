@@ -1,3 +1,6 @@
+
+📌📌📌📌📌 THIS FILES THE THEORY PART FOR HOW THE DATABASE CONNECTION IS DONE 📌📌📌📌📌
+
 app/database.py--------> file name // this file basically connects to database and returns a database object which uh can use for curd opetration
 ✅ What database.py does
 This file connects your FastAPI backend to MongoDB.

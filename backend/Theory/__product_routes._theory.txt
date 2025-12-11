@@ -1,1 +1,0 @@
-#this file includes, what the each API route for the product do, how do, and why do

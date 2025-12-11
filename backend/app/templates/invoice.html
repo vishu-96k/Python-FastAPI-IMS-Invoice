@@ -4,16 +4,98 @@
 <head>
   <meta charset="utf-8" />
   <title>Invoice {{ invoice._id }}</title>
-  <style>
-    body { font-family: Arial, sans-serif; font-size: 12px; }
-    table { width:100%; border-collapse: collapse; margin-top:12px; }
-    th, td { padding:8px; border:1px solid #ccc; }
-    .right { text-align:right; }
-    .section-title { margin-top: 20px; font-size: 14px; font-weight: bold; }
+ <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      background: #f4f6f9;
+      padding: 25px;
+      color: #2d3436;
+    }
+
+    /* Header Box */
+    .invoice-header {
+      background: #ffffff;
+      padding: 18px;
+      border: 1px solid #dfe6e9;
+      border-left: 5px solid #0984e3;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #2d3436;
+      margin: 0 0 10px 0;
+      font-size: 20px;
+    }
+
+    strong {
+      color: #2d3436;
+    }
+
+    .section-title {
+      margin-top: 25px;
+      padding-bottom: 4px;
+      font-size: 15px;
+      font-weight: bold;
+      color: #2d3436;
+      border-bottom: 2px solid #0984e3;
+    }
+
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #ffffff;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #dcdde1;
+    }
+
+    th {
+      background: #0984e3;
+      color: #ffffff;
+      font-weight: bold;
+      padding: 10px;
+      border: 1px solid #0672c8;
+      font-size: 13px;
+    }
+
+    td {
+      padding: 10px;
+      border: 1px solid #dcdde1;
+      font-size: 13px;
+    }
+
+    tr:nth-child(even) {
+      background: #f1f7ff;
+    }
+
+    tr:nth-child(odd) {
+      background: #ffffff;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    /* Summary table special formatting */
+    .summary-table td {
+      background: #fafbfc;
+    }
+
+    .summary-total {
+      background: #e1f0ff;
+      font-weight: bold;
+      border-top: 2px solid #0984e3;
+    }
+
   </style>
 </head>
 
 <body>
+
 
   <h2>Invoice #{{ invoice._id }}</h2>
 

@@ -1,3 +1,6 @@
+
+📌📌📌📌📌 THIS IS THE PROMPT FOR BACKEND WHICH UH WILL GIVE TO GPT 📌📌📌📌📌
+
 Here you go — a clean, production-ready backend plan for your Inventory Management System + Smart Invoice Generator, using:
 
 ✅ FastAPI

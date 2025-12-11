@@ -1,6 +1,6 @@
 
 # 1. user_model.py (MongoDB Document Structure)
-# This file is ONLY for reference + consistency. We dont have any dependency with this model files
+# This ( MODLES ) file is ONLY for reference + consistency. We dont have any dependency with this model files
 # MongoDB does NOT enforce schema, but you maintain structure here basially like a tble struture as uh have in SQL (SQL follows schema).
 # this file is NOT used by FastAPI or the database.
 # It is only a reference file made by you to understand the MongoDB structure.

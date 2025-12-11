@@ -35,7 +35,7 @@ from app.services.email_service import send_email_with_attachment
 
 app = FastAPI()  # Create FastAPI instance
 
-#-----------------USER ROUTES--------------------
+#-----------------USER AUTHRNTICATION ROUTES--------------------
 #home route
 @app.get("/")
 async def home(current_user=Depends(get_optional_user)): #this depends is an middle were, which will return what the funtion uh have sended in it

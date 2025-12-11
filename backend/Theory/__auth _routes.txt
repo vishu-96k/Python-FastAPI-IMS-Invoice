@@ -1,4 +1,6 @@
-#this file includes, what the each API route for the User do, how do, and why do
+
+📌📌📌📌📌 THIS FILE INCLUDES WHAT THE EACH API ROUTES FOR THE USER DO, HOW THEY DO, WHY THEY DO 📌📌📌📌📌
+
 """
  ========= HOME===================   
 home route furntion : 
